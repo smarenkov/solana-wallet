@@ -1,0 +1,13 @@
+version: "3"
+
+tasks:
+  build:
+    desc: Build the bundle.js
+    cmds:
+      - npx webpack
+
+  serve:
+    desc: Serve the index.html
+    cmds:
+      - serve -s . -l 3001
+      

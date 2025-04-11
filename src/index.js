@@ -22,11 +22,18 @@ const init = () => {
   };
   window.wallet.isConnected = getIsConnectedState;
 
-  async function sendTransaction( toAddress, token, amount ) {
-    const tokenAddress = walletService.getTokenAddressByType( token );
+  async function sendTransaction ( toAddress, token, amount ) {
+    console.log("sendTransaction", toAddress, token, amount);
     const tokenDecimal = walletService.getTokenDecimalByType( token );
     const rawAmount = walletService.convertAmountToRawAmount( amount, tokenDecimal );
 
+    if ( token === walletService.TokenType.SOL ) {
+      console.log("Sending SOL");
+      return await walletService.sendSolTransaction(toAddress, rawAmount);
+    }
+
+    const tokenAddress = walletService.getTokenAddressByType( token );
+    console.log("Sending token", tokenAddress);
     return await walletService.sendTransaction(toAddress, tokenAddress, rawAmount);
   };
   window.wallet.sendTransaction = sendTransaction;

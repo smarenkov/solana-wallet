@@ -1,4 +1,4 @@
-import { PublicKey, Transaction, Connection, clusterApiUrl, getAssociatedTokenAddress } from "@solana/web3.js";
+import { PublicKey, Transaction, SystemProgram, Connection, clusterApiUrl, getAssociatedTokenAddress } from "@solana/web3.js";
 import * as splToken from "@solana/spl-token";
 import { store } from '../store/store'
 
@@ -25,6 +25,9 @@ export function getTokenDecimalByType ( tokenType ) {
   if ( tokenType === TokenType.USDT ) {
     return 6
   }
+  if ( tokenType === TokenType.SOL ) {
+    return 9
+  }
   if ( tokenType === TokenType.TON ) { 
     throw Error('TON token is not supported yet');
   }
@@ -33,7 +36,7 @@ export function getTokenDecimalByType ( tokenType ) {
   throw Error( 'Unsupported token type' );
 }
 
-export function convertAmountToRawAmount(amount, decimals = 6) {
+export function convertAmountToRawAmount ( amount, decimals = 6 ) {
   const value = Number(amount);
   if (isNaN(value)) {
     throw new Error('Invalid amount');
@@ -43,7 +46,34 @@ export function convertAmountToRawAmount(amount, decimals = 6) {
 }
 
 export async function sendSolTransaction ( toAddress, amount ) {
+  const connection = store.solanaConnection;
+  if (!connection) throw Error('User is disconnected');
 
+  const wallet = window.solana;
+  if (!wallet || !wallet.isPhantom) {
+    throw Error('Wallet provider is not available');
+  }
+
+  const toPublicKey = new PublicKey(toAddress);
+
+  const instructions = [];
+
+  const transferIx = SystemProgram.transfer({
+    fromPubkey: wallet.publicKey,
+    toPubkey: toPublicKey,
+    lamports: amount,
+  });
+  instructions.push(transferIx);
+
+  const transaction = new Transaction();
+  transaction.add( ...instructions );
+
+  const recentBlockhash = await connection.getLatestBlockhash();
+  transaction.recentBlockhash = recentBlockhash.blockhash;
+
+  transaction.feePayer = wallet.publicKey;
+
+  await window.solana.signAndSendTransaction(transaction, connection)
 }
 
   

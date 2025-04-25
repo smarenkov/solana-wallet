@@ -106,11 +106,15 @@ export async function sendTransaction ( toAddress, tokenAddress, amount ) {
     toPublicKey
   );
   
-  const toTokenAccount = await connection.getAccountInfo( toTokenAccountAddress );
+  const isToAccountExist = await checkIfAssociatedTokenAccountExists(
+    connection,
+    mintPubkey,
+    toPubkey
+  );
   
   const instructions = [];
   
-  if ( !toTokenAccount ) {
+  if ( !isToAccountExist ) {
     console.log("Creating associated token account for recipient");
     const createAssociatedTokenAccountIx = splToken.createAssociatedTokenAccountInstruction(
       wallet.publicKey,
